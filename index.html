@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Sólidos por Envolventes Cilíndricas</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js para las gráficas 2D y 3D (versión actualizada) -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <!-- Math.js para parsear las funciones matemáticas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.js"></script>
+    <!-- MathJax para renderizar la integral con formato matemático -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            macros: {
+              blue: ['{\\color{blue}{#1}}', 1],
+              red: ['{\\color{red}{#1}}', 1],
+              orange: ['{\\color{orange}{#1}}', 1]
+            }
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .plot-container {
+            height: 450px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Visualizador por Envolventes Cilíndricas</h1>
+            <p class="text-lg text-gray-600 mt-2">Explora el método de las capas o cascarones cilíndricos.</p>
+        </header>
+
+        <!-- Panel de Controles -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Controles</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Función 1 -->
+                <div>
+                    <label for="f_x" class="block text-sm font-semibold text-blue-600">Función 1:</label>
+                    <input type="text" id="f_x" value="x-x^2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <!-- Función 2 -->
+                <div>
+                    <label for="g_x" class="block text-sm font-semibold text-red-600">Función 2:</label>
+                    <input type="text" id="g_x" value="0" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <p class="text-xs text-gray-500 mt-1">Usa '0' para una sola curva.</p>
+                </div>
+                <!-- Límites de Integración -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="a" class="block text-sm font-medium text-gray-700">Límite Inferior (a)</label>
+                        <input type="number" id="a" value="0" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="b" class="block text-sm font-medium text-gray-700">Límite Superior (b)</label>
+                        <input type="number" id="b" value="1" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                <!-- Eje de Rotación -->
+                <div>
+                    <label for="axis" class="block text-sm font-semibold text-orange-600">Eje de Rotación</label>
+                    <select id="axis" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="y">Eje Y (x=0)</option>
+                        <option value="x=h" selected>Recta Vertical (x=h)</option>
+                        <option value="x">Eje X (y=0)</option>
+                        <option value="y=k">Recta Horizontal (y=k)</option>
+                    </select>
+                </div>
+            </div>
+             <!-- Inputs para rectas personalizadas -->
+            <div id="custom-axis-inputs" class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                 <div id="k-input-container" class="hidden">
+                     <label for="k_val" class="block text-sm font-medium text-gray-700">Valor de k</label>
+                     <input type="number" id="k_val" value="-1" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                 </div>
+                 <div id="h-input-container">
+                     <label for="h_val" class="block text-sm font-medium text-gray-700">Valor de h</label>
+                     <input type="number" id="h_val" value="2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm">
+                 </div>
+            </div>
+            <!-- Mensaje de ayuda -->
+            <p id="help-text" class="text-sm text-amber-700 bg-amber-100 p-3 rounded-md mt-4"></p>
+             <!-- Botones de Generación -->
+             <div class="mt-6 pt-6 border-t border-gray-200 space-y-3">
+                <button id="generate-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span id="generate-btn-text">Generar Sólido</span>
+                </button>
+                <button id="toggle-shell-btn" class="hidden w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-6 rounded-lg shadow-sm transition-colors duration-200 ease-in-out">
+                    Ocultar Envolvente Típica
+                </button>
+            </div>
+        </div>
+
+        <!-- Visualizaciones -->
+        <div id="visuals-and-results-container" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-4 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-center mb-2">Región Plana y Rectángulo Típico</h3>
+                    <div id="plot2d" class="plot-container"></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-center mb-2">Sólido de Revolución (3D)</h3>
+                    <div id="plot3d" class="plot-container"></div>
+                </div>
+            </div>
+            
+            <!-- Resultados -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4">Resultados del Cálculo</h2>
+                <div class="flex flex-col md:flex-row items-center justify-around text-center">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-600">Integral de Volumen</h3>
+                        <div id="integral-display" class="text-2xl mt-2 p-4"></div>
+                    </div>
+                    <div class="mt-6 md:mt-0">
+                        <h3 class="text-lg font-medium text-gray-600">Volumen del Sólido</h3>
+                        <p id="volume-display" class="text-4xl font-bold text-indigo-600 mt-2">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center mt-12 text-gray-500">
+            <p>Diseñado por Departamento de Matemática Aplicada de Universidad Galileo + Gemini</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Referencias a Elementos del DOM ---
+        const f_x_input = document.getElementById('f_x');
+        const g_x_input = document.getElementById('g_x');
+        const a_input = document.getElementById('a');
+        const b_input = document.getElementById('b');
+        const axis_select = document.getElementById('axis');
+        const k_input_container = document.getElementById('k-input-container');
+        const h_input_container = document.getElementById('h-input-container');
+        const k_val_input = document.getElementById('k_val');
+        const h_val_input = document.getElementById('h_val');
+        const help_text = document.getElementById('help-text');
+        const generate_btn = document.getElementById('generate-btn');
+        const generate_btn_text = document.getElementById('generate-btn-text');
+        const toggle_shell_btn = document.getElementById('toggle-shell-btn');
+        const visuals_container = document.getElementById('visuals-and-results-container');
+        const plot2d_div = document.getElementById('plot2d');
+        const plot3d_div = document.getElementById('plot3d');
+        const integral_display_div = document.getElementById('integral-display');
+        const volume_display_div = document.getElementById('volume-display');
+        
+        let animationFrameId = null;
+        let isShellVisible = true;
+        let currentParams = {};
+
+        // --- Lógica de UI ---
+        function handleAxisChange() {
+            const selected_axis = axis_select.value;
+            k_input_container.classList.toggle('hidden', selected_axis !== 'y=k');
+            h_input_container.classList.toggle('hidden', selected_axis !== 'x=h');
+            const is_vertical_rotation = ['y', 'x=h'].includes(selected_axis);
+            if (is_vertical_rotation) {
+                help_text.innerHTML = "<strong>Regla de Envolventes:</strong> Para rotar sobre un eje <strong>vertical</strong>, el rectángulo es <strong>paralelo</strong> al eje (vertical). Por lo tanto, se integra con respecto a <strong>x</strong>. Las funciones deben ser `y=f(x)` y los límites `a, b` son del eje X.";
+            } else {
+                help_text.innerHTML = "<strong>Regla de Envolventes:</strong> Para rotar sobre un eje <strong>horizontal</strong>, el rectángulo es <strong>paralelo</strong> al eje (horizontal). Por lo tanto, se integra con respecto a <strong>y</strong>. Las funciones deben ser `x=f(y)` y los límites `a, b` son del eje Y.";
+            }
+        }
+
+        // --- Función Principal de Generación ---
+        function handleGenerateClick() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            generate_btn.disabled = true;
+            generate_btn_text.textContent = 'Generando...';
+            visuals_container.classList.remove('hidden');
+            toggle_shell_btn.classList.add('hidden');
+
+            setTimeout(() => {
+                try {
+                    const f_str = f_x_input.value || '0';
+                    const g_str = g_x_input.value || '0';
+                    const a = parseFloat(a_input.value);
+                    const b = parseFloat(b_input.value);
+                    const axis = axis_select.value;
+                    const k = (axis === 'y=k') ? parseFloat(k_val_input.value) : 0;
+                    const h = (axis === 'x=h') ? parseFloat(h_val_input.value) : 0;
+                    
+                    if (isNaN(a) || isNaN(b) || a > b) {
+                        showError("Límites 'a' y 'b' inválidos. Asegúrate que a <= b.");
+                        return;
+                    }
+
+                    const makeSafeEval = (s) => math.compile(s.replace(/sqrt\(([^)]+)\)/g, 'sqrt(max(0, $1))'));
+                    const f = makeSafeEval(f_str);
+                    const g = makeSafeEval(g_str);
+                    
+                    currentParams = { f, g, a, b, axis, k, h };
+
+                    plot2D(f, g, a, b, axis, k, h);
+                    calculateAndDisplayVolume(f_str, g_str, f, g, a, b, axis, k, h);
+
+                    let start = null;
+                    const duration = 8000;
+
+                    const step = (timestamp) => {
+                        if (!start) start = timestamp;
+                        const progress = timestamp - start;
+                        const angle = Math.min((progress / duration) * 360, 360);
+                        plot3D(f, g, a, b, angle, axis, k, h);
+                        if (progress < duration) {
+                            animationFrameId = requestAnimationFrame(step);
+                        } else {
+                            generate_btn.disabled = false;
+                            generate_btn_text.textContent = 'Generar Sólido';
+                            animationFrameId = null;
+                            isShellVisible = true;
+                            toggle_shell_btn.textContent = 'Ocultar Envolvente Típica';
+                            toggle_shell_btn.classList.remove('hidden');
+                        }
+                    };
+                    animationFrameId = requestAnimationFrame(step);
+                } catch(err) {
+                     generate_btn.disabled = false;
+                     generate_btn_text.textContent = 'Generar Sólido';
+                     console.error(err);
+                     showError("Error en la expresión de la función. Revisa la sintaxis.");
+                }
+            }, 50); 
+        }
+
+        function showError(message) {
+             plot2d_div.innerHTML = `<div class="w-full h-full flex items-center justify-center text-red-600 p-4 text-center">${message}</div>`;
+             plot3d_div.innerHTML = '';
+             integral_display_div.textContent = '';
+             volume_display_div.textContent = '--';
+        }
+
+        // --- Funciones de Graficación ---
+        function plot2D(f, g, a, b, axis, k, h) {
+            const steps = 200; 
+            const traces = [];
+            const is_vertical_rotation = ['y', 'x=h'].includes(axis);
+
+            const evaluate = (func, scope) => {
+                try {
+                    const val = func.evaluate(scope);
+                    return isNaN(val) || !isFinite(val) ? null : val;
+                } catch (e) { return null; }
+            };
+
+            const layout = { 
+                margin: { t: 20, r: 20, b: 40, l: 40 }, 
+                xaxis: { title: 'x' }, 
+                yaxis: { title: 'y', scaleanchor: "x", scaleratio: 1 }, 
+                legend: { x: 0.05, y: 0.95 },
+                shapes: []
+            };
+
+            if (is_vertical_rotation) { // Integrando en X
+                const x_range = math.range(a, b, (b - a) / steps, true).toArray();
+                const y_vals_f = x_range.map(x => evaluate(f, { x }));
+                const y_vals_g = x_range.map(x => evaluate(g, { x }));
+                
+                traces.push({ x: x_range, y: y_vals_f, mode: 'lines', name: 'Función 1', line: { color: 'rgb(59, 130, 246)', width: 3 }, connectgaps: false });
+                traces.push({ x: x_range, y: y_vals_g, mode: 'lines', name: 'Función 2', line: { color: 'rgb(239, 68, 68)', width: 3 }, connectgaps: false });
+
+                const fill_x = x_range.filter((v, i) => y_vals_f[i] !== null).concat(x_range.filter((v, i) => y_vals_g[i] !== null).slice().reverse());
+                const fill_y = y_vals_f.filter(v => v !== null).concat(y_vals_g.filter(v => v !== null).slice().reverse());
+                traces.push({ x: fill_x, y: fill_y, fill: 'toself', fillcolor: 'rgba(59, 130, 246, 0.2)', line: { color: 'transparent' }, showlegend: false });
+
+                const axis_x_val = (axis === 'y') ? 0 : h;
+                const all_y = y_vals_f.concat(y_vals_g).filter(y => y !== null && isFinite(y));
+                traces.push({ x: [axis_x_val, axis_x_val], y: [math.min(all_y), math.max(all_y)], mode: 'lines', name: 'Eje de Rotación', line: { color: 'orange', width: 2.5, dash: 'dash' } });
+
+                const x_mid = a + (b - a) / 2;
+                const y1 = evaluate(f, { x: x_mid });
+                const y2 = evaluate(g, { x: x_mid });
+                if (y1 !== null && y2 !== null) {
+                    const rect_width = Math.max((b-a) / 50, 0.01);
+                    layout.shapes.push({ type: 'rect', x0: x_mid - rect_width/2, x1: x_mid + rect_width/2, y0: Math.min(y1,y2), y1: Math.max(y1,y2), line: {color: 'black', width: 2}, fillcolor: 'rgba(0,0,0,0.4)'});
+                }
+            
+            } else { // Integrando en Y
+                const y_range = math.range(a, b, (b - a) / steps, true).toArray();
+                const x_vals_f = y_range.map(y => evaluate(f, { y }));
+                const x_vals_g = y_range.map(y => evaluate(g, { y }));
+
+                traces.push({ x: x_vals_f, y: y_range, mode: 'lines', name: 'Función 1', line: { color: 'rgb(59, 130, 246)', width: 3 }, connectgaps: false });
+                traces.push({ x: x_vals_g, y: y_range, mode: 'lines', name: 'Función 2', line: { color: 'rgb(239, 68, 68)', width: 3 }, connectgaps: false });
+                
+                const fill_x = x_vals_f.filter(v => v !== null).concat(x_vals_g.filter(v => v !== null).slice().reverse());
+                const fill_y = y_range.filter((v, i) => x_vals_f[i] !== null).concat(y_range.filter((v, i) => x_vals_g[i] !== null).slice().reverse());
+                traces.push({ x: fill_x, y: fill_y, fill: 'toself', fillcolor: 'rgba(59, 130, 246, 0.2)', line: { color: 'transparent' }, showlegend: false });
+
+                const axis_y_val = (axis === 'x') ? 0 : k;
+                const all_x = x_vals_f.concat(x_vals_g).filter(x => x !== null && isFinite(x));
+                traces.push({ x: [math.min(all_x), math.max(all_x)], y: [axis_y_val, axis_y_val], mode: 'lines', name: 'Eje de Rotación', line: { color: 'orange', width: 2.5, dash: 'dash' } });
+            
+                const y_mid = a + (b - a) / 2;
+                const x1 = evaluate(f, { y: y_mid });
+                const x2 = evaluate(g, { y: y_mid });
+                if (x1 !== null && x2 !== null) {
+                    const rect_height = Math.max((b-a) / 50, 0.01);
+                    layout.shapes.push({ type: 'rect', x0: Math.min(x1,x2), x1: Math.max(x1,x2), y0: y_mid - rect_height/2, y1: y_mid + rect_height/2, line: {color: 'black', width: 2}, fillcolor: 'rgba(0,0,0,0.4)'});
+                }
+            }
+            
+            Plotly.newPlot(plot2d_div, traces, layout, {responsive: true});
+        }
+                
+        function plot3D(f, g, a, b, rotation_deg, axis, k, h) {
+             const is_vertical_rotation = ['y', 'x=h'].includes(axis);
+             const rotation_rad = rotation_deg * Math.PI / 180;
+             const range_steps = 40;
+             const theta_steps = 40;
+             const steps = 200; 
+
+             const final_opacity = (rotation_deg >= 359 && !isShellVisible) ? 1.0 : 0.5;
+             const surface_props = {type:'surface', showscale: false, connectgaps: false, opacity: final_opacity, contours: {x:{show:false}, y:{show:false}, z:{show:false}}};
+
+             function createRevolutionSurface(func, color) {
+                 const z_surf = [], y_surf = [], x_surf = [];
+                 const main_range = math.range(a, b, (b-a)/range_steps, true).toArray();
+                 const theta_range = rotation_rad > 0 ? math.range(0, rotation_rad, rotation_rad / theta_steps, true).toArray() : [0];
+
+                 for (let i=0; i < main_range.length; i++) {
+                     const z_row = [], y_row = [], x_row = [];
+                     const val = main_range[i];
+                     for (let j = 0; j < theta_range.length; j++) {
+                         const theta = theta_range[j];
+                         let x,y,z;
+                         
+                         if(is_vertical_rotation) { 
+                            const y_val = func.evaluate({x: val});
+                            if (y_val === null || !isFinite(y_val)) { x=y=z=null; }
+                            else {
+                                const radius = val - h;
+                                x = h + radius * Math.cos(theta); y = y_val; z = radius * Math.sin(theta);
+                            }
+                         } else { 
+                             const x_val = func.evaluate({y: val});
+                             if (x_val === null || !isFinite(x_val)) { x=y=z=null; }
+                             else {
+                                 const radius = val - k;
+                                 x = x_val; y = k + radius * Math.cos(theta); z = radius * Math.sin(theta);
+                             }
+                         }
+                         x_row.push(x); y_row.push(y); z_row.push(z);
+                     }
+                      x_surf.push(x_row); y_surf.push(y_row); z_surf.push(z_row);
+                 }
+                 return {...surface_props, x:x_surf, y:y_surf, z:z_surf, colorscale: color};
+             }
+
+            const data = [createRevolutionSurface(f, 'Blues'), createRevolutionSurface(g, 'Reds')];
+            const theta_range_full = rotation_rad > 0 ? math.range(0, rotation_rad, rotation_rad / theta_steps, true).toArray() : [0];
+            
+            // *** INICIO DE LA CORRECCIÓN ***
+            if (is_vertical_rotation) {
+                const y_at_b = [f.evaluate({x:b}), g.evaluate({x:b})].filter(v=>v!==null && isFinite(v));
+                if (y_at_b.length > 1 && Math.abs(b - h) > 0.001 && Math.abs(y_at_b[0] - y_at_b[1]) > 0.001) {
+                    const radius = b - h;
+                    const y_min = Math.min(...y_at_b), y_max = Math.max(...y_at_b);
+                    const y_cyl_range = math.range(y_min, y_max, (y_max-y_min)/range_steps, true).toArray();
+                    const x_surf = y_cyl_range.map(_ => theta_range_full.map(t => h + radius * Math.cos(t)));
+                    const z_surf = y_cyl_range.map(_ => theta_range_full.map(t => radius * Math.sin(t)));
+                    const y_surf = y_cyl_range.map(y => Array(theta_range_full.length).fill(y));
+                    data.push({...surface_props, x:x_surf, y:y_surf, z:z_surf, colorscale: 'Greys'});
+                }
+                if (Math.abs(a - h) > 0.001) {
+                    const y_at_a = [f.evaluate({x:a}), g.evaluate({x:a})].filter(v=>v!==null && isFinite(v));
+                     if (y_at_a.length > 1 && Math.abs(y_at_a[0] - y_at_a[1]) > 0.001) {
+                       const radius = a - h;
+                       const y_min = Math.min(...y_at_a), y_max = Math.max(...y_at_a);
+                       const y_cyl_range = math.range(y_min, y_max, (y_max - y_min)/range_steps, true).toArray();
+                       const x_surf = y_cyl_range.map(_ => theta_range_full.map(t => h + radius * Math.cos(t)));
+                       const z_surf = y_cyl_range.map(_ => theta_range_full.map(t => radius * Math.sin(t)));
+                       const y_surf = y_cyl_range.map(y => Array(theta_range_full.length).fill(y));
+                       data.push({...surface_props, x:x_surf, y:y_surf, z:z_surf, colorscale: 'Greys'});
+                    }
+                }
+            } else { // Horizontal Rotation
+                const x_at_b = [f.evaluate({y:b}), g.evaluate({y:b})].filter(v=>v!==null && isFinite(v));
+                if (x_at_b.length > 1 && Math.abs(b-k) > 0.001 && Math.abs(x_at_b[0] - x_at_b[1]) > 0.001) {
+                     const x_min = Math.min(...x_at_b), x_max = Math.max(...x_at_b);
+                     const r_range = math.range(x_min, x_max, (x_max-x_min)/range_steps, true).toArray();
+                     const radius = b - k;
+                     const x_surf = r_range.map(r => Array(theta_range_full.length).fill(r));
+                     const y_surf = r_range.map(_ => theta_range_full.map(t => k + radius * Math.cos(t)));
+                     const z_surf = r_range.map(_ => theta_range_full.map(t => radius * Math.sin(t)));
+                     data.push({...surface_props, x:x_surf, y:y_surf, z:z_surf, colorscale: 'Greys'});
+                }
+                if (Math.abs(a-k) > 0.001) {
+                    const x_at_a = [f.evaluate({y:a}), g.evaluate({y:a})].filter(v=>v!==null && isFinite(v));
+                    if (x_at_a.length > 1 && Math.abs(x_at_a[0] - x_at_a[1]) > 0.001) {
+                        const x_min = Math.min(...x_at_a), x_max = Math.max(...x_at_a);
+                        const r_range = math.range(x_min, x_max, (x_max-x_min)/range_steps, true).toArray();
+                        const radius = a - k;
+                        const x_surf = r_range.map(r => Array(theta_range_full.length).fill(r));
+                        const y_surf = r_range.map(_ => theta_range_full.map(t => k + radius * Math.cos(t)));
+                        const z_surf = r_range.map(_ => theta_range_full.map(t => radius * Math.sin(t)));
+                        data.push({...surface_props, x:x_surf, y:y_surf, z:z_surf, colorscale: 'Greys'});
+                    }
+                }
+            }
+            // *** FIN DE LA CORRECCIÓN ***
+
+            const axis_trace_3d = { type: 'scatter3d', mode: 'lines', line: { color: 'orange', width: 5 }, name: 'Eje de Rotación' };
+            if (is_vertical_rotation) {
+                const y_values = math.range(a, b, (b-a)/steps, true).toArray().flatMap(x => [f.evaluate({x}), g.evaluate({x})]).filter(y => y !== null && isFinite(y));
+                const y_min = Math.min(...y_values, 0); const y_max = Math.max(...y_values, 0);
+                const axis_x = (axis === 'y') ? 0 : h;
+                axis_trace_3d.x = [axis_x, axis_x]; axis_trace_3d.y = [y_min, y_max]; axis_trace_3d.z = [0, 0];
+            } else {
+                const x_values = math.range(a, b, (b-a)/steps, true).toArray().flatMap(y => [f.evaluate({y}), g.evaluate({y})]).filter(x => x !== null && isFinite(x));
+                const x_min = Math.min(...x_values, 0); const x_max = Math.max(...x_values, 0);
+                const axis_y = (axis === 'x') ? 0 : k;
+                axis_trace_3d.x = [x_min, x_max]; axis_trace_3d.y = [axis_y, axis_y]; axis_trace_3d.z = [0, 0];
+            }
+            data.push(axis_trace_3d);
+
+            if (rotation_deg >= 359 && isShellVisible) {
+                const mid_val = a + (b - a) / 2;
+                const thickness = Math.max((b - a) / 50, 0.01);
+                const shell_theta = math.range(0, 2 * Math.PI, 2 * Math.PI / 40, true).toArray();
+                shell_theta.push(0); 
+                const shell_props = { type: 'surface', colorscale: [['0', 'rgba(0,0,0,0.8)'], ['1', 'rgba(0,0,0,0.8)']], showscale: false, opacity: 0.8 };
+                if (is_vertical_rotation) {
+                    const radius_inner = Math.abs((mid_val - thickness / 2) - h);
+                    const radius_outer = Math.abs((mid_val + thickness / 2) - h);
+                    const y1 = f.evaluate({ x: mid_val }), y2 = g.evaluate({ x: mid_val });
+                    if (y1 !== null && y2 !== null) {
+                        const [y_bot, y_top] = [Math.min(y1, y2), Math.max(y1, y2)];
+                        const cos_t = shell_theta.map(t => Math.cos(t));
+                        const sin_t = shell_theta.map(t => Math.sin(t));
+                        const x_outer = cos_t.map(c => h + radius_outer * c);
+                        const z_outer = sin_t.map(s => radius_outer * s);
+                        data.push({ ...shell_props, x: [x_outer, x_outer], y: [Array(shell_theta.length).fill(y_bot), Array(shell_theta.length).fill(y_top)], z: [z_outer, z_outer] });
+                        const x_inner = cos_t.map(c => h + radius_inner * c);
+                        const z_inner = sin_t.map(s => radius_inner * s);
+                        data.push({ ...shell_props, x: [x_inner, x_inner], y: [Array(shell_theta.length).fill(y_bot), Array(shell_theta.length).fill(y_top)], z: [z_inner, z_inner] });
+                        data.push({ ...shell_props, x: [x_inner, x_outer], y: [Array(shell_theta.length).fill(y_top), Array(shell_theta.length).fill(y_top)], z: [z_inner, z_outer] });
+                        data.push({ ...shell_props, x: [x_inner, x_outer], y: [Array(shell_theta.length).fill(y_bot), Array(shell_theta.length).fill(y_bot)], z: [z_inner, z_outer] });
+                    }
+                } else {
+                    const radius_inner = Math.abs((mid_val - thickness / 2) - k);
+                    const radius_outer = Math.abs((mid_val + thickness / 2) - k);
+                    const x1 = f.evaluate({ y: mid_val }), x2 = g.evaluate({ y: mid_val });
+                    if (x1 !== null && x2 !== null) {
+                        const [x_left, x_right] = [Math.min(x1, x2), Math.max(x1, x2)];
+                        const cos_t = shell_theta.map(t => Math.cos(t));
+                        const sin_t = shell_theta.map(t => Math.sin(t));
+                        const y_outer = cos_t.map(c => k + radius_outer * c);
+                        const z_outer = sin_t.map(s => radius_outer * s);
+                        data.push({ ...shell_props, x: [Array(shell_theta.length).fill(x_left), Array(shell_theta.length).fill(x_right)], y: [y_outer, y_outer], z: [z_outer, z_outer] });
+                        const y_inner = cos_t.map(c => k + radius_inner * c);
+                        const z_inner = sin_t.map(s => radius_inner * s);
+                        data.push({ ...shell_props, x: [Array(shell_theta.length).fill(x_left), Array(shell_theta.length).fill(x_right)], y: [y_inner, y_inner], z: [z_inner, z_inner] });
+                        data.push({ ...shell_props, x: [Array(shell_theta.length).fill(x_left), Array(shell_theta.length).fill(x_left)], y: [y_inner, y_outer], z: [z_inner, z_outer] });
+                        data.push({ ...shell_props, x: [Array(shell_theta.length).fill(x_right), Array(shell_theta.length).fill(x_right)], y: [y_inner, y_outer], z: [z_inner, z_outer] });
+                    }
+                }
+            }
+            const layout = {hovermode: false, showlegend: false, margin: {t:0, r:0, b:0, l:0}, scene:{aspectmode:'data', camera:{eye:{x:1.5,y:1.5,z:1.5}}}};
+            Plotly.newPlot(plot3d_div, data, layout, {responsive: true});
+        }
+        
+        // --- Lógica de Cálculo ---
+        function calculateAndDisplayVolume(f_str_raw, g_str_raw, f, g, a, b, axis, k, h) {
+            const n_steps = 2000;
+            let volume = 0;
+            
+            const toLatex = (str) => {
+                try { return math.parse(str).toTex(); } 
+                catch (e) { return str.replace(/\*/g, ' '); }
+            };
+
+            let integral_latex = '';
+
+            if (['y', 'x=h'].includes(axis)) { // Rotación vertical
+                const dx = (b - a) / n_steps;
+                for (let i = 0; i < n_steps; i++) {
+                    const x = a + i * dx;
+                    const radius = Math.abs(x - h);
+                    const height = Math.abs(f.evaluate({ x }) - g.evaluate({ x }));
+                    if (!isNaN(radius) && !isNaN(height)) {
+                        volume += 2 * Math.PI * radius * height * dx;
+                    }
+                }
+                const radius_str = h === 0 ? 'x' : `|x - ${h}|`;
+                const height_str = `\\left| ${toLatex(f_str_raw)} - ${toLatex(g_str_raw)} \\right|`;
+                integral_latex = `V = 2\\pi \\int_{${a}}^{${b}} \\orange{${radius_str}} \\blue{${height_str}} dx`;
+
+            } else { // Rotación horizontal
+                const dy = (b - a) / n_steps;
+                for (let i = 0; i < n_steps; i++) {
+                    const y = a + i * dy;
+                    const radius = Math.abs(y - k);
+                    const height = Math.abs(f.evaluate({ y }) - g.evaluate({ y }));
+                     if (!isNaN(radius) && !isNaN(height)) {
+                        volume += 2 * Math.PI * radius * height * dy;
+                    }
+                }
+                const radius_str = k === 0 ? 'y' : `|y - ${k}|`;
+                const height_str = `\\left| ${toLatex(f_str_raw)} - ${toLatex(g_str_raw)} \\right|`;
+                integral_latex = `V = 2\\pi \\int_{${a}}^{${b}} \\orange{${radius_str}} \\blue{${height_str}} dy`;
+            }
+            
+            if (isNaN(volume)) {
+                volume_display_div.innerHTML = `<span class="text-2xl text-red-600">Error de Dominio</span>`;
+                integral_display_div.innerHTML = `<span class="text-sm text-red-600">La función no es real en el intervalo.</span>`;
+                return;
+            }
+
+            volume_display_div.textContent = Math.abs(volume).toFixed(4) + ' u³';
+            integral_display_div.innerHTML = `$${integral_latex}$`;
+            if (window.MathJax) {
+                 MathJax.typesetPromise().catch((err) => console.error('MathJax error: ', err));
+            }
+        }
+        
+        // --- Event Listeners ---
+        axis_select.addEventListener('change', handleAxisChange);
+        generate_btn.addEventListener('click', handleGenerateClick);
+        toggle_shell_btn.addEventListener('click', () => {
+            isShellVisible = !isShellVisible;
+            toggle_shell_btn.textContent = isShellVisible ? 'Ocultar Envolvente Típica' : 'Mostrar Envolvente Típica';
+            const { f, g, a, b, axis, k, h } = currentParams;
+            if (f) {
+                plot3D(f, g, a, b, 360, axis, k, h);
+            }
+        });
+        
+        // --- Carga inicial ---
+        handleAxisChange();
+    </script>
+</body>
+</html>
+
