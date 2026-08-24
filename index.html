@@ -84,11 +84,11 @@
                 <!-- Límites de Integración -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="a" class="block text-sm font-medium text-gray-700">Límite Inferior (a)</label>
+                        <label for="a" class="block text-sm font-medium text-gray-700">Límite inferior \(a\)</label>
                         <input type="number" id="a" value="0" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label for="b" class="block text-sm font-medium text-gray-700">Límite Superior (b)</label>
+                        <label for="b" class="block text-sm font-medium text-gray-700">Límite superior \(b\)</label>
                         <input type="number" id="b" value="1" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
@@ -96,10 +96,10 @@
                 <div>
                     <label for="axis" class="block text-sm font-semibold text-orange-600">Eje de Rotación</label>
                     <select id="axis" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option value="y">Eje Y (x=0)</option>
-                        <option value="x=h" selected>Recta Vertical (x=h)</option>
-                        <option value="x">Eje X (y=0)</option>
-                        <option value="y=k">Recta Horizontal (y=k)</option>
+                        <option value="y">Eje Y (x = 0)</option>
+                        <option value="x=h" selected>Recta vertical (x = h)</option>
+                        <option value="x">Eje X (y = 0)</option>
+                        <option value="y=k">Recta horizontal (y = k)</option>
                     </select>
                 </div>
             </div>
@@ -195,10 +195,11 @@
             h_input_container.classList.toggle('hidden', selected_axis !== 'x=h');
             const is_vertical_rotation = ['y', 'x=h'].includes(selected_axis);
             if (is_vertical_rotation) {
-                help_text.innerHTML = "<strong>Regla de Envolventes:</strong> Para rotar sobre un eje <strong>vertical</strong>, el rectángulo es <strong>paralelo</strong> al eje (vertical). Por lo tanto, se integra con respecto a <strong>x</strong>. Las funciones deben ser `y=f(x)` y los límites `a, b` son del eje X.";
+                help_text.innerHTML = "<strong>Regla de envolventes:</strong> Para rotar sobre un eje <strong>vertical</strong>, el rectángulo es <strong>paralelo</strong> al eje. Por lo tanto, se integra con respecto a \\(x\\). Las funciones deben ser \\(y=f(x)\\) y los límites \\(a,b\\) corresponden al eje \\(X\\).";
             } else {
-                help_text.innerHTML = "<strong>Regla de Envolventes:</strong> Para rotar sobre un eje <strong>horizontal</strong>, el rectángulo es <strong>paralelo</strong> al eje (horizontal). Por lo tanto, se integra con respecto a <strong>y</strong>. Las funciones deben ser `x=f(y)` y los límites `a, b` son del eje Y.";
+                help_text.innerHTML = "<strong>Regla de envolventes:</strong> Para rotar sobre un eje <strong>horizontal</strong>, el rectángulo es <strong>paralelo</strong> al eje. Por lo tanto, se integra con respecto a \\(y\\). Las funciones deben ser \\(x=f(y)\\) y los límites \\(a,b\\) corresponden al eje \\(Y\\).";
             }
+            globalThis.MathJax?.typesetPromise?.([help_text]).catch((err) => console.error('MathJax error: ', err));
         }
 
         // --- Función Principal de Generación ---
