@@ -28,21 +28,43 @@
     </script>
     <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <style>
+        :root {
+            --dma-navy: #12324a;
+            --dma-blue: #0b6380;
+            --dma-gold: #d6a52a;
+            --dma-ice: #edf4f6;
+            --dma-ink: #173042;
+        }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+            background: linear-gradient(180deg, var(--dma-navy) 0 8px, var(--dma-ice) 8px 100%);
+            color: var(--dma-ink);
         }
         .plot-container {
             height: 450px;
         }
+        .dma-header { text-align:left; border-left:5px solid var(--dma-gold); padding-left:1.25rem; }
+        .dma-kicker { color:var(--dma-blue); font-size:.75rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+        .dma-header h1 { color:var(--dma-navy); letter-spacing:-.025em; }
+        .dma-rule { width:4rem; height:3px; margin-top:1rem; border-radius:99px; background:var(--dma-gold); }
+        .bg-white { border:1px solid #d7e2e7; box-shadow:0 10px 28px rgba(18,50,74,.08) !important; }
+        #generate-btn { background:var(--dma-blue) !important; }
+        #generate-btn:hover { background:var(--dma-navy) !important; }
+        input:focus, select:focus, button:focus-visible { outline:3px solid rgba(214,165,42,.38) !important; outline-offset:2px; }
+        .dma-footer { border-top:1px solid #cbd9df; padding-top:1.25rem; color:#526b79; }
+        .dma-footer strong { color:var(--dma-navy); }
+        .dma-footer a { color:var(--dma-blue); text-decoration:underline; text-underline-offset:3px; }
+        @media (max-width:640px) { .plot-container { height:360px; } .dma-header h1 { font-size:2rem; } }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-8">
+        <header class="dma-header mb-8">
+            <p class="dma-kicker">Universidad Galileo · Departamento de Matemática Aplicada</p>
             <h1 class="text-4xl font-bold text-gray-900">Visualizador por Envolventes Cilíndricas</h1>
             <p class="text-lg text-gray-600 mt-2">Explora el método de las capas o cascarones cilíndricos.</p>
+            <div class="dma-rule" aria-hidden="true"></div>
         </header>
 
         <!-- Panel de Controles -->
@@ -136,8 +158,9 @@
             </div>
         </div>
 
-        <footer class="text-center mt-12 text-gray-500">
-            <p>Diseñado por Departamento de Matemática Aplicada de Universidad Galileo + Gemini</p>
+        <footer class="dma-footer text-center mt-12">
+            <p><strong>Departamento de Matemática Aplicada</strong> · Universidad Galileo</p>
+            <p class="mt-1">Applet educativo desarrollado con apoyo de IA · <a href="mailto:alberth@galileo.edu">alberth@galileo.edu</a></p>
         </footer>
     </div>
 
@@ -549,4 +572,3 @@
     </script>
 </body>
 </html>
-
