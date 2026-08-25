@@ -34,6 +34,10 @@
             --dma-gold: #d6a52a;
             --dma-ice: #edf4f6;
             --dma-ink: #173042;
+            --dma-strong-blue: #0057b8;
+            --dma-turquoise: #008c95;
+            --dma-orange: #e06b16;
+            --dma-violet: #7357b8;
         }
         body {
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -48,12 +52,17 @@
         .dma-kicker { color:var(--dma-blue); font-size:.75rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
         .dma-header h1 { margin-top:.2rem; padding-left:1rem; border-left:5px solid var(--dma-gold); color:var(--dma-navy); font-size:clamp(22px,4vw,32px); line-height:1.2; letter-spacing:-.02em; }
         .bg-white { border:1px solid #d7e2e7; border-radius:14px !important; box-shadow:0 8px 24px rgba(18,50,74,.07) !important; }
-        #generate-btn { background:var(--dma-blue) !important; }
+        #generate-btn { background:var(--dma-turquoise) !important; }
         #generate-btn:hover { background:var(--dma-navy) !important; }
         input:focus, select:focus, button:focus-visible { outline:3px solid rgba(214,165,42,.38) !important; outline-offset:2px; }
         .dma-footer { border-top:1px solid #cbd9df; padding-top:1.25rem; color:#526b79; }
         .dma-footer strong { color:var(--dma-navy); }
         .dma-footer a { color:var(--dma-blue); text-decoration:underline; text-underline-offset:3px; }
+        label.text-blue-600 { color:var(--dma-strong-blue) !important; }
+        label.text-red-600 { color:var(--dma-orange) !important; }
+        label.text-orange-600 { color:var(--dma-violet) !important; }
+        #volume-display { color:#8a6508 !important; }
+        .bg-white:has(#volume-display) { border-top:4px solid var(--dma-gold); background:#fffaf0 !important; }
         @media (max-width:640px) { .plot-container { height:360px; } }
     </style>
 </head>
@@ -297,16 +306,16 @@
                 const y_vals_f = x_range.map(x => evaluate(f, { x }));
                 const y_vals_g = x_range.map(x => evaluate(g, { x }));
                 
-                traces.push({ x: x_range, y: y_vals_f, mode: 'lines', name: 'Función 1', line: { color: 'rgb(59, 130, 246)', width: 3 }, connectgaps: false });
-                traces.push({ x: x_range, y: y_vals_g, mode: 'lines', name: 'Función 2', line: { color: 'rgb(239, 68, 68)', width: 3 }, connectgaps: false });
+                traces.push({ x: x_range, y: y_vals_f, mode: 'lines', name: 'Función 1', line: { color: '#0057b8', width: 3 }, connectgaps: false });
+                traces.push({ x: x_range, y: y_vals_g, mode: 'lines', name: 'Función 2', line: { color: '#e06b16', width: 3 }, connectgaps: false });
 
                 const fill_x = x_range.filter((v, i) => y_vals_f[i] !== null).concat(x_range.filter((v, i) => y_vals_g[i] !== null).slice().reverse());
                 const fill_y = y_vals_f.filter(v => v !== null).concat(y_vals_g.filter(v => v !== null).slice().reverse());
-                traces.push({ x: fill_x, y: fill_y, fill: 'toself', fillcolor: 'rgba(59, 130, 246, 0.2)', line: { color: 'transparent' }, showlegend: false });
+                traces.push({ x: fill_x, y: fill_y, fill: 'toself', fillcolor: 'rgba(0, 140, 149, 0.20)', line: { color: 'transparent' }, showlegend: false });
 
                 const axis_x_val = (axis === 'y') ? 0 : h;
                 const all_y = y_vals_f.concat(y_vals_g).filter(y => y !== null && isFinite(y));
-                traces.push({ x: [axis_x_val, axis_x_val], y: [math.min(all_y), math.max(all_y)], mode: 'lines', name: 'Eje de Rotación', line: { color: 'orange', width: 2.5, dash: 'dash' } });
+                traces.push({ x: [axis_x_val, axis_x_val], y: [math.min(all_y), math.max(all_y)], mode: 'lines', name: 'Eje de Rotación', line: { color: '#7357b8', width: 2.5, dash: 'dash' } });
 
                 const x_mid = a + (b - a) / 2;
                 const y1 = evaluate(f, { x: x_mid });
@@ -321,16 +330,16 @@
                 const x_vals_f = y_range.map(y => evaluate(f, { y }));
                 const x_vals_g = y_range.map(y => evaluate(g, { y }));
 
-                traces.push({ x: x_vals_f, y: y_range, mode: 'lines', name: 'Función 1', line: { color: 'rgb(59, 130, 246)', width: 3 }, connectgaps: false });
-                traces.push({ x: x_vals_g, y: y_range, mode: 'lines', name: 'Función 2', line: { color: 'rgb(239, 68, 68)', width: 3 }, connectgaps: false });
+                traces.push({ x: x_vals_f, y: y_range, mode: 'lines', name: 'Función 1', line: { color: '#0057b8', width: 3 }, connectgaps: false });
+                traces.push({ x: x_vals_g, y: y_range, mode: 'lines', name: 'Función 2', line: { color: '#e06b16', width: 3 }, connectgaps: false });
                 
                 const fill_x = x_vals_f.filter(v => v !== null).concat(x_vals_g.filter(v => v !== null).slice().reverse());
                 const fill_y = y_range.filter((v, i) => x_vals_f[i] !== null).concat(y_range.filter((v, i) => x_vals_g[i] !== null).slice().reverse());
-                traces.push({ x: fill_x, y: fill_y, fill: 'toself', fillcolor: 'rgba(59, 130, 246, 0.2)', line: { color: 'transparent' }, showlegend: false });
+                traces.push({ x: fill_x, y: fill_y, fill: 'toself', fillcolor: 'rgba(0, 140, 149, 0.20)', line: { color: 'transparent' }, showlegend: false });
 
                 const axis_y_val = (axis === 'x') ? 0 : k;
                 const all_x = x_vals_f.concat(x_vals_g).filter(x => x !== null && isFinite(x));
-                traces.push({ x: [math.min(all_x), math.max(all_x)], y: [axis_y_val, axis_y_val], mode: 'lines', name: 'Eje de Rotación', line: { color: 'orange', width: 2.5, dash: 'dash' } });
+                traces.push({ x: [math.min(all_x), math.max(all_x)], y: [axis_y_val, axis_y_val], mode: 'lines', name: 'Eje de Rotación', line: { color: '#7357b8', width: 2.5, dash: 'dash' } });
             
                 const y_mid = a + (b - a) / 2;
                 const x1 = evaluate(f, { y: y_mid });
@@ -388,7 +397,8 @@
                  return {...surface_props, x:x_surf, y:y_surf, z:z_surf, colorscale: color};
              }
 
-            const data = [createRevolutionSurface(f, 'Blues'), createRevolutionSurface(g, 'Reds')];
+            const blueScale=[[0,'#dbeafe'],[1,'#0057b8']],orangeScale=[[0,'#ffedd5'],[1,'#e06b16']];
+            const data = [createRevolutionSurface(f, blueScale), createRevolutionSurface(g, orangeScale)];
             const theta_range_full = rotation_rad > 0 ? math.range(0, rotation_rad, rotation_rad / theta_steps, true).toArray() : [0];
             
             // *** INICIO DE LA CORRECCIÓN ***
@@ -441,7 +451,7 @@
             }
             // *** FIN DE LA CORRECCIÓN ***
 
-            const axis_trace_3d = { type: 'scatter3d', mode: 'lines', line: { color: 'orange', width: 5 }, name: 'Eje de Rotación' };
+            const axis_trace_3d = { type: 'scatter3d', mode: 'lines', line: { color: '#7357b8', width: 5 }, name: 'Eje de Rotación' };
             if (is_vertical_rotation) {
                 const y_values = math.range(a, b, (b-a)/steps, true).toArray().flatMap(x => [f.evaluate({x}), g.evaluate({x})]).filter(y => y !== null && isFinite(y));
                 const y_min = Math.min(...y_values, 0); const y_max = Math.max(...y_values, 0);
